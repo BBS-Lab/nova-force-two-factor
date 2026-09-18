@@ -1,0 +1,33 @@
+laravel: '@testbench'
+
+env:
+  # Skip password-history recording so the demo needs no extra table.
+  - PASSWORD_ROTATION_HISTORY_COUNT=0
+
+providers:
+  - Laravel\Nova\NovaServiceProvider
+  - Laravel\Nova\NovaCoreServiceProvider
+  - Workbench\App\Providers\NovaServiceProvider
+
+migrations:
+  - workbench/database/migrations
+
+workbench:
+  start: /nova
+  user: nova@laravel.com
+  build:
+    - package:discover
+    - asset-publish
+    - create-sqlite-db
+    - db:wipe
+    - migrate:refresh
+    - db:seed:
+        --class: 'Workbench\Database\Seeders\DatabaseSeeder'
+  assets:
+    - nova-assets
+  sync: []
+
+purge:
+  directories:
+    - lang/*
+    - public/vendor/*

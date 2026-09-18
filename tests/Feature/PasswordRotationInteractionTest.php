@@ -1,0 +1,97 @@
+<?php
+
+declare(strict_types=1);
+
+use BBSLab\NovaForceTwoFactor\Http\Middleware\EnsureTwoFactorEnabled;
+use BBSLab\NovaPasswordRotation\Http\Middleware\EnsurePasswordIsNotExpired;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Support\Facades\Route;
+use Workbench\App\Models\User;
+
+use function Pest\Laravel\get;
+
+beforeEach(function (): void {
+    config([
+        'nova-force-two-factor.enabled' => true,
+        'laravel-password-rotation.enabled' => true,
+        'laravel-password-rotation.days' => 90,
+        'laravel-password-rotation.force_on_first_login' => false,
+    ]);
+
+    $this->withoutMiddleware([VerifyCsrfToken::class, ValidateCsrfToken::class]);
+
+    // Both real middlewares, on every route, in the order Nova's group would run
+    // them (force-2FA first). The redirect targets are lightweight stand-ins for
+    // Nova's real pages so we exercise the middleware interaction, not rendering.
+    Route::middleware(['web', EnsureTwoFactorEnabled::class, EnsurePasswordIsNotExpired::class])
+        ->group(function (): void {
+            Route::get('/panel', fn (): string => 'panel')->name('panel');
+            Route::get('/nova/user-security', fn (): string => 'user-security')->name('nova.pages.user-security');
+            Route::get('/nova/password-rotation/expired', fn (): string => 'change-your-password')
+                ->name('nova-password-rotation.expired.show');
+        });
+});
+
+/**
+ * Authenticate as an admin with the given 2FA enrolment and password state.
+ * Not persisted — both middlewares read the user off the guard.
+ */
+function loginWith(bool $twoFactor, bool $expired): User
+{
+    $factory = User::factory();
+
+    if ($twoFactor) {
+        $factory = $factory->withTwoFactor();
+    }
+
+    if ($expired) {
+        $factory = $factory->passwordExpired();
+    }
+
+    $user = $factory->make();
+    test()->actingAs($user);
+
+    return $user;
+}
+
+it('lets an enrolled admin with a fresh password reach Nova', function (): void {
+    loginWith(twoFactor: true, expired: false);
+
+    get('/panel', ['Accept' => 'text/html'])->assertOk()->assertSee('panel');
+});
+
+it('forces an un-enrolled admin with a fresh password to 2FA enrolment', function (): void {
+    loginWith(twoFactor: false, expired: false);
+
+    get('/panel', ['Accept' => 'text/html'])
+        ->assertRedirect(route('nova.pages.user-security'));
+});
+
+it('forces an enrolled admin with an expired password to change it', function (): void {
+    loginWith(twoFactor: true, expired: true);
+
+    get('/panel', ['Accept' => 'text/html'])
+        ->assertRedirect(route('nova-password-rotation.expired.show'));
+});
+
+it('funnels an un-enrolled admin with an expired password to the change screen first', function (): void {
+    loginWith(twoFactor: false, expired: true);
+
+    // Both middlewares want to act; following the chain must terminate on the
+    // password-change screen (password rotation wins) — and never loop.
+    test()->followingRedirects()
+        ->get('/panel', ['Accept' => 'text/html'])
+        ->assertOk()
+        ->assertSee('change-your-password');
+});
+
+it('lets an un-enrolled admin with an expired password reach the password-rotation page', function (): void {
+    // This is why nova-force-two-factor excepts nova-password-rotation.expired.*:
+    // an un-enrolled admin must still be able to open the change screen.
+    loginWith(twoFactor: false, expired: true);
+
+    get('/nova/password-rotation/expired', ['Accept' => 'text/html'])
+        ->assertOk()
+        ->assertSee('change-your-password');
+});
