@@ -41,6 +41,7 @@ class User extends Authenticatable implements MustRotatePassword
         'password',
         'two_factor_enabled',
         'password_changed_at',
+        'is_sso',
     ];
 
     /**
@@ -63,6 +64,7 @@ class User extends Authenticatable implements MustRotatePassword
             'password' => 'hashed',
             'two_factor_enabled' => 'boolean',
             'two_factor_confirmed_at' => 'datetime',
+            'is_sso' => 'boolean',
         ];
     }
 

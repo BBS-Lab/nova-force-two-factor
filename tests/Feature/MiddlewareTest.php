@@ -2,11 +2,14 @@
 
 declare(strict_types=1);
 
+use BBSLab\NovaForceTwoFactor\Facades\ForceTwoFactor;
 use BBSLab\NovaForceTwoFactor\Http\Middleware\EnsureTwoFactorEnabled;
 use BBSLab\NovaToast\Toast;
 use Illuminate\Auth\GenericUser;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Workbench\App\Models\User;
 
@@ -181,4 +184,34 @@ it('still redirects when no exceptions are configured', function (): void {
 
     get('/reports', ['Accept' => 'text/html'])
         ->assertRedirect(route('nova.pages.user-security'));
+});
+
+it('lets an un-enrolled admin through when a bypass callback returns true', function (): void {
+    ForceTwoFactor::bypass(fn (): bool => true);
+    loginAdmin();
+
+    get('/panel', ['Accept' => 'text/html'])->assertOk()->assertSee('panel');
+});
+
+it('still redirects an un-enrolled admin when the bypass callback returns false', function (): void {
+    ForceTwoFactor::bypass(fn (): bool => false);
+    loginAdmin();
+
+    get('/panel', ['Accept' => 'text/html'])
+        ->assertRedirect(route('nova.pages.user-security'));
+});
+
+it('hands the request and the un-enrolled user to the bypass callback', function (): void {
+    $received = null;
+    ForceTwoFactor::bypass(function (Request $request, Authenticatable $user) use (&$received): bool {
+        $received = [$request, $user];
+
+        return true;
+    });
+    loginAdmin();
+
+    get('/panel', ['Accept' => 'text/html'])->assertOk();
+
+    expect($received[0])->toBeInstanceOf(Request::class)
+        ->and($received[1])->toBeInstanceOf(Authenticatable::class);
 });

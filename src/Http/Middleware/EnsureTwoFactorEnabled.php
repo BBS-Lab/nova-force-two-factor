@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BBSLab\NovaForceTwoFactor\Http\Middleware;
 
+use BBSLab\NovaForceTwoFactor\TwoFactorManager;
 use BBSLab\NovaToast\Toast;
 use Closure;
 use Illuminate\Http\Request;
@@ -77,6 +78,12 @@ class EnsureTwoFactorEnabled
         }
 
         if ($user->hasEnabledTwoFactorAuthentication()) {
+            return true;
+        }
+
+        // Host-registered escape hatch (e.g. SSO admins whose second factor is
+        // handled by the identity provider), consulted before forcing enrolment.
+        if (app(TwoFactorManager::class)->shouldBypass($request, $user)) {
             return true;
         }
 
