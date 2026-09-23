@@ -2,6 +2,16 @@
 
 All notable changes to `bbs-lab/nova-force-two-factor` will be documented in this file.
 
+## v1.1.0 - 2026-09-23
+
+Add a bypass hook so specific requests can be exempted from the forced two-factor enrolment — e.g. **SSO admins** whose second factor is handled by the identity provider. Backward compatible.
+
+### ✨ Added
+
+- **`ForceTwoFactor` facade** with `ForceTwoFactor::bypass(fn (Request $request, Authenticatable $user) => ...)` — a runtime bypass the `EnsureTwoFactorEnabled` middleware consults for an authenticated, not-yet-enrolled admin before redirecting to the User Security page. Backed by a container-singleton manager, so callbacks survive `config:cache`; register several and any returning `true` exempts the request.
+
+**Full Changelog**: https://github.com/BBS-Lab/nova-force-two-factor/compare/v1.0.0...v1.1.0
+
 ## v2.1.0 - 2026-09-23
 
 Add a bypass hook so specific requests can be exempted from the forced two-factor enrolment — e.g. **SSO admins** whose second factor is handled by the identity provider. Backward compatible.
