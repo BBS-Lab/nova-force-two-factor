@@ -74,6 +74,27 @@ return [
   blocked — they don't need listing (and can't be removed), so an admin can never lock themselves out or
   break the SPA.
 
+### Bypassing enrolment per request (e.g. SSO admins)
+
+`except.*` matches URLs. To exempt specific **users** instead — for instance SSO admins whose second
+factor is handled by the identity provider and who shouldn't be pushed into local 2FA — register a bypass
+callback via the `ForceTwoFactor` facade in a service provider's `boot()`. It receives the request and the
+un-enrolled admin; returning `true` lets the request through:
+
+```php
+use BBSLab\NovaForceTwoFactor\Facades\ForceTwoFactor;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
+
+ForceTwoFactor::bypass(
+    fn (Request $request, Authenticatable $user) => $request->hasSession() && $request->session()->get('sso') === true,
+);
+```
+
+Register the callback in code, **not** in config (a closure breaks `config:cache`), and guard
+`hasSession()` before reading the session. Several callbacks may be registered — the request is exempt as
+soon as any returns `true`.
+
 The toast wording lives in the package translations; publish them to customise:
 
 ```bash
@@ -90,7 +111,8 @@ too — so it sees page visits **and** every script/style/XHR request. It treats
 - **Background XHR** → never redirected: reads pass through, writes are blocked with `403`. Redirecting these
   would break the SPA and enrolment itself.
 
-An admin who has enrolled, an anonymous request, and the allow-listed routes/paths all pass straight through.
+An admin who has enrolled, an anonymous request, the allow-listed routes/paths, and any request a
+registered bypass callback exempts all pass straight through.
 
 ### Manual middleware registration
 
