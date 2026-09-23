@@ -25,6 +25,12 @@ class NovaForceTwoFactorServiceProvider extends PackageServiceProvider
      */
     public function packageRegistered(): void
     {
+        // Shared runtime config point (bypass and future callbacks). A singleton
+        // so the facade and the middleware talk to the same instance; callbacks
+        // registered in a host's boot() therefore reach the middleware. Bound
+        // unconditionally, before the auto-registration guard below.
+        $this->app->singleton(TwoFactorManager::class);
+
         if (! $this->autoRegistersMiddleware()) {
             return;
         }

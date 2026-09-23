@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Workbench\App\Providers;
 
+use BBSLab\NovaForceTwoFactor\Facades\ForceTwoFactor;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Fortify\Features;
 use Laravel\Nova\Dashboard;
@@ -26,6 +29,14 @@ class NovaServiceProvider extends NovaApplicationServiceProvider
                 Features::twoFactorAuthentication(['confirm' => true, 'confirmPassword' => true]),
             ])
             ->register();
+
+        // Demo of the bypass hook: exempt SSO-provisioned admins from the forced
+        // 2FA enrolment. The callback receives the request and the un-enrolled
+        // user; here it reads the seeded `is_sso` flag. A real app might instead
+        // read a session attribute set at SSO login.
+        ForceTwoFactor::bypass(
+            fn (Request $request, Authenticatable $user): bool => $user->is_sso === true,
+        );
     }
 
     protected function routes(): void
