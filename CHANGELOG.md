@@ -2,6 +2,16 @@
 
 All notable changes to `bbs-lab/nova-force-two-factor` will be documented in this file.
 
+## v2.1.0 - 2026-09-23
+
+Add a bypass hook so specific requests can be exempted from the forced two-factor enrolment — e.g. **SSO admins** whose second factor is handled by the identity provider. Backward compatible.
+
+### ✨ Added
+
+- **`ForceTwoFactor` facade** with `ForceTwoFactor::bypass(fn (Request $request, Authenticatable $user) => ...)` — a runtime bypass the `EnsureTwoFactorEnabled` middleware consults for an authenticated, not-yet-enrolled admin before redirecting to the User Security page. Backed by a container-singleton manager, so callbacks survive `config:cache`; register several and any returning `true` exempts the request.
+
+**Full Changelog**: https://github.com/BBS-Lab/nova-force-two-factor/compare/v2.0.0...v2.1.0
+
 ## v1.0.0 - 2026-09-18
 
 First stable release of **Nova Force Two Factor** — make [Laravel Nova](https://nova.laravel.com)'s built-in two-factor authentication **mandatory**. A middleware redirects any admin who has not enrolled to the User Security page — with a toast (via [`bbs-lab/nova-toast`](https://github.com/BBS-Lab/nova-toast)) explaining why — until they set it up.
