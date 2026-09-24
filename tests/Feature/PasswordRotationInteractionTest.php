@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use BBSLab\LaravelOkta\Http\Controllers\OktaController;
 use BBSLab\NovaForceTwoFactor\Http\Middleware\EnsureTwoFactorEnabled;
 use BBSLab\NovaPasswordRotation\Http\Middleware\EnsurePasswordIsNotExpired;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
@@ -94,4 +95,33 @@ it('lets an un-enrolled admin with an expired password reach the password-rotati
     get('/nova/password-rotation/expired', ['Accept' => 'text/html'])
         ->assertOk()
         ->assertSee('change-your-password');
+});
+
+// --- End-to-end interop with the REAL sibling packages (registry-driven) -------
+
+it('gives rotation precedence at the 2FA gate via the shared registry, without the except.routes crutch', function (): void {
+    // Drop the static except.routes fallback: only the owes-rotation bypass that
+    // bbs-lab/laravel-password-rotation registers into the ForceTwoFactor registry
+    // can make the 2FA gate yield. An un-enrolled + expired admin must then be sent
+    // STRAIGHT to the rotation screen — never bounced through the 2FA set-up page.
+    config(['nova-force-two-factor.except.routes' => []]);
+    loginWith(twoFactor: false, expired: true);
+
+    get('/panel', ['Accept' => 'text/html'])
+        ->assertRedirect(route('nova-password-rotation.expired.show'));
+});
+
+it('lets an Okta-authenticated admin bypass BOTH the 2FA gate and the rotation gate', function (): void {
+    // The real laravel-okta registration exempts okta_authenticated sessions from
+    // both registries, so an Okta admin who is un-enrolled AND has an expired
+    // password still reaches the panel — proving "2FA except Okta" and
+    // "rotation except Okta" against the actual packages, not a test closure.
+    config(['nova-force-two-factor.except.routes' => []]);
+    $user = User::factory()->passwordExpired()->make();
+
+    test()->actingAs($user)
+        ->withSession([OktaController::AUTHENTICATED_SESSION_KEY => true])
+        ->get('/panel', ['Accept' => 'text/html'])
+        ->assertOk()
+        ->assertSee('panel');
 });

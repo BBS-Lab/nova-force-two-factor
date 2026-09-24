@@ -2,6 +2,12 @@
 
 All notable changes to `bbs-lab/nova-force-two-factor` will be documented in this file.
 
+## v2.0.1 - 2026-09-24
+
+### 🧪 Tests
+
+- Added end-to-end interop coverage with the real sibling packages: an owes-rotation admin is let through the 2FA gate via the shared registry — rotation before 2FA, without relying on the `except.routes` config crutch — and an Okta-authenticated admin bypasses both the 2FA and the password-rotation gates. No runtime change.
+
 ## v2.0.0 - 2026-09-24
 
 Re-based onto the framework-agnostic [bbs-lab/laravel-force-two-factor](https://github.com/BBS-Lab/laravel-force-two-factor), so the bypass registry is now shared with the Filament adapter — one registered reason to skip 2FA applies to whichever panel enforces it.
