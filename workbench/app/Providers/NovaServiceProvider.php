@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Workbench\App\Providers;
 
-use BBSLab\NovaForceTwoFactor\Facades\ForceTwoFactor;
+use BBSLab\LaravelForceTwoFactor\Facades\ForceTwoFactor;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;

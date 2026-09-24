@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace BBSLab\NovaForceTwoFactor\Http\Middleware;
 
-use BBSLab\NovaForceTwoFactor\TwoFactorManager;
+use BBSLab\LaravelForceTwoFactor\TwoFactorManager;
 use BBSLab\NovaToast\Toast;
 use Closure;
 use Illuminate\Http\Request;
@@ -29,7 +29,7 @@ class EnsureTwoFactorEnabled
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! config('nova-force-two-factor.enabled')) {
+        if (! config('laravel-force-two-factor.enabled')) {
             return $next($request);
         }
 

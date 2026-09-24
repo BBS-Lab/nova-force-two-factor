@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BBSLab\NovaForceTwoFactor\Tests;
 
+use BBSLab\LaravelForceTwoFactor\LaravelForceTwoFactorServiceProvider;
 use BBSLab\NovaForceTwoFactor\NovaForceTwoFactorServiceProvider;
 use BBSLab\NovaToast\NovaToastServiceProvider;
 use Illuminate\Foundation\Application;
@@ -24,6 +25,9 @@ abstract class TestCase extends Orchestra
         return [
             NovaCoreServiceProvider::class,
             NovaToastServiceProvider::class,
+            // The framework-agnostic base (auto-discovered in a real app): binds
+            // the shared TwoFactorManager registry the middleware reads from.
+            LaravelForceTwoFactorServiceProvider::class,
             NovaForceTwoFactorServiceProvider::class,
         ];
     }

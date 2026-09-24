@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use BBSLab\NovaForceTwoFactor\Facades\ForceTwoFactor;
+use BBSLab\LaravelForceTwoFactor\Facades\ForceTwoFactor;
 use BBSLab\NovaForceTwoFactor\Http\Middleware\EnsureTwoFactorEnabled;
 use BBSLab\NovaToast\Toast;
 use Illuminate\Auth\GenericUser;
@@ -18,7 +18,7 @@ use function Pest\Laravel\post;
 use function Pest\Laravel\postJson;
 
 beforeEach(function (): void {
-    config(['nova-force-two-factor.enabled' => true]);
+    config(['laravel-force-two-factor.enabled' => true]);
 
     // CSRF is irrelevant here and its class was renamed across Laravel majors,
     // so disable both possible names (unknown names are ignored).
@@ -59,7 +59,7 @@ function loginAdmin(bool $enrolled = false): User
 }
 
 it('passes through when enforcement is disabled', function (): void {
-    config(['nova-force-two-factor.enabled' => false]);
+    config(['laravel-force-two-factor.enabled' => false]);
     loginAdmin(enrolled: false);
 
     get('/panel')->assertOk()->assertSee('panel');

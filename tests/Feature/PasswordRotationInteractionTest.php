@@ -13,7 +13,7 @@ use function Pest\Laravel\get;
 
 beforeEach(function (): void {
     config([
-        'nova-force-two-factor.enabled' => true,
+        'laravel-force-two-factor.enabled' => true,
         'laravel-password-rotation.enabled' => true,
         'laravel-password-rotation.days' => 90,
         'laravel-password-rotation.force_on_first_login' => false,

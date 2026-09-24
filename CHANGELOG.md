@@ -2,6 +2,21 @@
 
 All notable changes to `bbs-lab/nova-force-two-factor` will be documented in this file.
 
+## v2.0.0 - 2026-09-24
+
+Re-based onto the framework-agnostic [bbs-lab/laravel-force-two-factor](https://github.com/BBS-Lab/laravel-force-two-factor), so the bypass registry is now shared with the Filament adapter — one registered reason to skip 2FA applies to whichever panel enforces it.
+
+### ✨ Changed
+
+- The `ForceTwoFactor` facade and the `TwoFactorManager` registry moved to the base `bbs-lab/laravel-force-two-factor` (installed automatically). Register bypasses via `BBSLab\LaravelForceTwoFactor\Facades\ForceTwoFactor`.
+- The master switch moved to the base config: `config('laravel-force-two-factor.enabled')` (env `FORCE_TWO_FACTOR_ENABLED`). `config/nova-force-two-factor.php` keeps only the Nova-specific `auto_register_middleware` and `except.*`.
+
+### ⬆️ Upgrading from v1
+
+- Replace `use BBSLab\NovaForceTwoFactor\Facades\ForceTwoFactor;` with `use BBSLab\LaravelForceTwoFactor\Facades\ForceTwoFactor;`.
+- Rename the env `NOVA_FORCE_TWO_FACTOR` → `FORCE_TWO_FACTOR_ENABLED` (config key `nova-force-two-factor.enabled` → `laravel-force-two-factor.enabled`); publish the base config with `--tag=laravel-force-two-factor-config`.
+- Middleware behaviour, routes, the `except.*` lists and the enrolment flow are unchanged.
+
 ## v1.1.0 - 2026-09-23
 
 Add a bypass hook so specific requests can be exempted from the forced two-factor enrolment — e.g. **SSO admins** whose second factor is handled by the identity provider. Backward compatible.

@@ -4,19 +4,8 @@ declare(strict_types=1);
 
 return [
 
-    /*
-    |--------------------------------------------------------------------------
-    | Enforce two-factor authentication
-    |--------------------------------------------------------------------------
-    |
-    | When enabled, every authenticated Nova admin who has not fully enrolled in
-    | Nova's built-in (Fortify) 2FA is redirected to the "User Security" page
-    | until they enrol. Set NOVA_FORCE_TWO_FACTOR=false to disable enforcement,
-    | e.g. in local development.
-    |
-    */
-
-    'enabled' => (bool) env('NOVA_FORCE_TWO_FACTOR', true),
+    // The master `enabled` switch is shared across adapters and now lives in the
+    // base package: config/laravel-force-two-factor.php (env FORCE_TWO_FACTOR_ENABLED).
 
     /*
     |--------------------------------------------------------------------------
