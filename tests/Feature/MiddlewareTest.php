@@ -133,6 +133,35 @@ it('always allows the user-security enrolment subtree', function (): void {
     get('/nova/user-security/confirm')->assertOk()->assertSee('confirm');
 });
 
+it('allow-lists the user-security subtree when the Nova path is root ("/")', function (): void {
+    // A root-mounted Nova (config nova.path = "/") makes Nova::path() return "/";
+    // the enrolment subtree must still be reachable so an un-enrolled admin can set 2FA up.
+    config(['nova.path' => '/']);
+
+    Route::middleware(['web', EnsureTwoFactorEnabled::class])->group(function (): void {
+        Route::get('/user-security', fn (): string => 'security')->name('nova.pages.user-security');
+        Route::get('/user-security/two-factor-authentication', fn (): string => 'enable');
+    });
+
+    loginAdmin(); // un-enrolled
+
+    get('/user-security', ['Accept' => 'text/html'])->assertOk()->assertSee('security');
+    get('/user-security/two-factor-authentication', ['Accept' => 'text/html'])->assertOk()->assertSee('enable');
+});
+
+it('still redirects an un-enrolled admin to user security when the Nova path is root ("/")', function (): void {
+    config(['nova.path' => '/']);
+
+    Route::middleware(['web', EnsureTwoFactorEnabled::class])->group(function (): void {
+        Route::get('/dashboard', fn (): string => 'dash');
+        Route::get('/user-security', fn (): string => 'security')->name('nova.pages.user-security');
+    });
+
+    loginAdmin();
+
+    get('/dashboard', ['Accept' => 'text/html'])->assertRedirect(route('nova.pages.user-security'));
+});
+
 it('never blocks the Fortify 2FA enrolment endpoints under user-security', function (string $path): void {
     Route::middleware(['web', EnsureTwoFactorEnabled::class])->get($path, fn (): string => 'ok');
     loginAdmin(); // un-enrolled — must still reach every enrolment endpoint

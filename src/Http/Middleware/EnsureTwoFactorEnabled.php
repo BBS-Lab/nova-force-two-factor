@@ -87,13 +87,17 @@ class EnsureTwoFactorEnabled
             return true;
         }
 
+        // trim() empties a root Nova path ("/"), so build the prefix with a
+        // trailing slash only when there is one — otherwise the patterns would
+        // gain a leading slash and never match Request::is()'s slash-less path.
         $novaPath = trim(Nova::path(), '/');
+        $prefix = $novaPath === '' ? '' : "{$novaPath}/";
 
         // Anti-lockout: never block Nova's own assets, logout, or the enrolment
         // page, or an admin could brick themselves / break the SPA. Not
         // configurable — a consumer editing except.* can never strip these.
         if ($request->routeIs('nova.asset.*', 'nova.logout')
-            || $request->is("{$novaPath}/user-security", "{$novaPath}/user-security/*")
+            || $request->is("{$prefix}user-security", "{$prefix}user-security/*")
         ) {
             return true;
         }
