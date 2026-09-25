@@ -2,6 +2,16 @@
 
 All notable changes to `bbs-lab/nova-force-two-factor` will be documented in this file.
 
+## v2.0.2 - 2026-09-25
+
+Patch release. Backward compatible.
+
+### 🐛 Fixed
+
+- **Root-mounted Nova (`nova.path` = `/`)** — the forced-2FA middleware now allow-lists the User Security enrolment subtree correctly at the root path. Previously `trim(Nova::path(), '/')` emptied the path, producing a `/user-security` pattern that never matched `Request::is()`'s slash-less path, so an un-enrolled admin was redirected away from the very page needed to enrol (lockout / redirect loop).
+
+**Full Changelog**: https://github.com/BBS-Lab/nova-force-two-factor/compare/v2.0.1...v2.0.2
+
 ## v2.0.1 - 2026-09-24
 
 ### 🧪 Tests
